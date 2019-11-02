@@ -15,6 +15,7 @@ namespace TrafficManager.UI {
 		public MainMenuPanel MainMenu { get; private set; }
 #if DEBUG
 		public DebugMenuPanel DebugMenu { get; private set; }
+		public FMUMenuPanel FMUMenu { get; private set; }
 #endif
 		public static TrafficManagerTool GetTrafficManagerTool(bool createIfRequired=true) {
 			if (tool == null && createIfRequired) {
@@ -46,9 +47,10 @@ namespace TrafficManager.UI {
 			MainMenu.gameObject.AddComponent<CustomKeyHandler>();
 #if DEBUG
 			DebugMenu = (DebugMenuPanel)uiView.AddUIComponent(typeof(DebugMenuPanel));
+            FMUMenu = (FMUMenuPanel)uiView.AddUIComponent(typeof(FMUMenuPanel));
 #endif
 
-			ToolMode = TrafficManagerMode.None;
+            ToolMode = TrafficManagerMode.None;
 		}
 
 		~UIBase() {
@@ -102,8 +104,9 @@ namespace TrafficManager.UI {
 			TrafficManagerTool.ShowAdvisor("MainMenu");
 #if DEBUG
 			GetDebugMenu().Show();
+            GetFMUMenu().Show();
 #endif
-			SetToolMode(TrafficManagerMode.Activated);
+            SetToolMode(TrafficManagerMode.Activated);
 			_uiShown = true;
 			MainMenuButton.UpdateSprites();
 			UIView.SetFocus(MainMenu);
@@ -114,8 +117,10 @@ namespace TrafficManager.UI {
 			GetMenu().Hide();
 #if DEBUG
 			GetDebugMenu().Hide();
+            GetFMUMenu().Hide();
+
 #endif
-			TrafficManagerTool tmTool = GetTrafficManagerTool(false);
+            TrafficManagerTool tmTool = GetTrafficManagerTool(false);
 			if (tmTool != null) {
 				tmTool.SetToolMode(UI.ToolMode.None);
 			}
@@ -132,9 +137,14 @@ namespace TrafficManager.UI {
 		internal DebugMenuPanel GetDebugMenu() {
 			return DebugMenu;
 		}
+
+        internal FMUMenuPanel GetFMUMenu()
+        {
+            return FMUMenu;
+        }
 #endif
 
-		public static void SetToolMode(TrafficManagerMode mode) {
+        public static void SetToolMode(TrafficManagerMode mode) {
 			if (mode == ToolMode) return;
 
 			ToolMode = mode;

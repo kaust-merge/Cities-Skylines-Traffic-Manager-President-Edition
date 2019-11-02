@@ -19,6 +19,7 @@ using TrafficManager.Manager;
 using CSUtil.Commons;
 using TrafficManager.Custom.Data;
 using TrafficManager.Manager.Impl;
+using System.Linq;
 
 namespace TrafficManager {
 	public class LoadingExtension : LoadingExtensionBase {
@@ -2559,7 +2560,9 @@ namespace TrafficManager {
 			IsGameLoaded = false;
 		}
 
-		public override void OnLevelLoaded(LoadMode mode) {
+        private UICheckBox _fmuCheckBox;
+
+        public override void OnLevelLoaded(LoadMode mode) {
 			SimulationManager.UpdateMode updateMode = SimulationManager.instance.m_metaData.m_updateMode;
 			Log.Info($"OnLevelLoaded({mode}) called. updateMode={updateMode}");
 			base.OnLevelLoaded(mode);
@@ -2692,7 +2695,89 @@ namespace TrafficManager {
 			//Log._Debug($"Current tool: {ToolManager.instance.m_properties.CurrentTool}");
 
 			Log.Info("OnLevelLoaded complete.");
-		}
+
+
+            if (_fmuCheckBox != null) return;
+
+            CityServiceWorldInfoPanel panel = UIView.library.Get<CityServiceWorldInfoPanel>(typeof(CityServiceWorldInfoPanel).Name);
+            //CityServiceWorldInfoPanel
+            // building.m_flag contain Active ==> is ON
+            UICheckBox checkBox = panel.component.AddUIComponent<UICheckBox>();
+
+            checkBox.width = panel.component.width;
+            checkBox.height = 20f;
+            checkBox.clipChildren = true;
+
+            UISprite sprite = checkBox.AddUIComponent<UISprite>();
+            sprite.spriteName = "ToggleBase";
+            sprite.size = new Vector2(16f, 16f);
+            sprite.relativePosition = Vector3.zero;
+
+            checkBox.checkedBoxObject = sprite.AddUIComponent<UISprite>();
+            ((UISprite)checkBox.checkedBoxObject).spriteName = "ToggleBaseFocused";
+            checkBox.checkedBoxObject.size = new Vector2(16f, 16f);
+            checkBox.checkedBoxObject.relativePosition = Vector3.zero;
+
+            checkBox.label = checkBox.AddUIComponent<UILabel>();
+            checkBox.label.text = " ";
+            checkBox.label.textScale = 0.9f;
+            checkBox.label.relativePosition = new Vector3(22f, 2f);
+
+            ushort buildingId = WorldInfoPanel.GetCurrentInstanceID().Building;
+            checkBox.name = "testFMU";
+            checkBox.text = "test fmu " + buildingId;
+
+            checkBox.relativePosition = new Vector3(14f, 164f + 130f + 5f);
+
+            panel.component.height = 321f + 5f + 16f;
+
+
+        //    public bool isCityServiceEnabled
+        //{
+        //    get
+        //    {
+        //        if (Singleton<BuildingManager>.exists && m_InstanceID.Building != 0)
+        //        {
+        //            return Singleton<BuildingManager>.instance.m_buildings.m_buffer[m_InstanceID.Building].m_productionRate != 0;
+        //        }
+        //        return false;
+        //    }
+        //    set
+        //    {
+        //        if (Singleton<SimulationManager>.exists && m_InstanceID.Building != 0)
+        //        {
+        //            Singleton<SimulationManager>.instance.AddAction(ToggleBuilding(m_InstanceID.Building, value));
+        //        }
+        //    }
+        //}
+
+        //checkBox.eventCheckChanged += (component, check) =>
+        //{
+
+
+        //    var buildings = Singleton<BuildingManager>.instance.m_buildings.m_buffer.Where(k => k.Info.GetInstanceID() == (int)buildingId);
+        //    if(buildings.Any())
+        //    {
+        //        var building = buildings.FirstOrDefault();
+        //        var m_productionRate = building.m_productionRate;
+        //        var m_electricityBuffer = building.m_electricityBuffer;
+
+        //        checkBox.text = "m_productionRate: " + m_productionRate + " ; m_electricityBuffer: " + m_electricityBuffer;
+
+        //        if (check)
+        //        {
+        //            //MakeHistoricalDataManager.Instance.AddBuildingId(buildingId);
+        //        }
+        //        else
+        //        {
+        //            //MakeHistoricalDataManager.Instance.RemoveBuildingId(buildingId);
+        //        }
+        //    }
+        //};
+
+        _fmuCheckBox = checkBox;
+
+        }
 
 		/*private void FixNonCreatedNodeProblems() {
 			for (int nodeId = 0; nodeId < NetManager.MAX_NODE_COUNT; ++nodeId) {

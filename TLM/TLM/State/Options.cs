@@ -46,8 +46,9 @@ namespace TrafficManager.State {
 #if DEBUG
 		private static UICheckBox citizenOverlayToggle = null;
 		private static UICheckBox buildingOverlayToggle = null;
+		private static UICheckBox fmuOverlayToggle = null;
 #endif
-		private static UICheckBox allowEnterBlockedJunctionsToggle = null;
+        private static UICheckBox allowEnterBlockedJunctionsToggle = null;
 		private static UICheckBox allowUTurnsToggle = null;
 		private static UICheckBox allowNearTurnOnRedToggle = null;
 		private static UICheckBox allowFarTurnOnRedToggle = null;
@@ -119,13 +120,16 @@ namespace TrafficManager.State {
 		public static bool vehicleOverlay = false;
 		public static bool citizenOverlay = false;
 		public static bool buildingOverlay = false;
+		public static bool fmuOverlay = false;
 #else
 		public static bool nodesOverlay = false;
 		public static bool vehicleOverlay = false;
 		public static bool citizenOverlay = false;
 		public static bool buildingOverlay = false;
+		public static bool fmuOverlay = false;
+
 #endif
-		public static bool allowEnterBlockedJunctions = false;
+        public static bool allowEnterBlockedJunctions = false;
 		public static bool allowUTurns = false;
 		public static bool allowNearTurnOnRed = false;
 		public static bool allowFarTurnOnRed = false;
@@ -337,6 +341,7 @@ namespace TrafficManager.State {
 			vehicleOverlayToggle = panelHelper.AddCheckbox(Translation.GetString("Vehicles"), vehicleOverlay, onVehicleOverlayChanged) as UICheckBox;
 			citizenOverlayToggle = panelHelper.AddCheckbox(Translation.GetString("Citizens"), citizenOverlay, onCitizenOverlayChanged) as UICheckBox;
 			buildingOverlayToggle = panelHelper.AddCheckbox(Translation.GetString("Buildings"), buildingOverlay, onBuildingOverlayChanged) as UICheckBox;
+			fmuOverlayToggle = panelHelper.AddCheckbox("FMU", fmuOverlay, onfmuOverlayChanged) as UICheckBox;
 #endif
 
 			// MAINTENANCE
@@ -1032,8 +1037,17 @@ namespace TrafficManager.State {
 			buildingOverlay = newVal;
 		}
 
+        private static void onfmuOverlayChanged(bool newVal)
+        {
+            if (!checkGameLoaded())
+                return;
+
+            Log._Debug($"fmu overlay changed to {newVal}");
+            fmuOverlay = newVal;
+        }
+
 #if QUEUEDSTATS
-		private static void onShowPathFindStatsChanged(bool newVal) {
+        private static void onShowPathFindStatsChanged(bool newVal) {
 			if (!checkGameLoaded())
 				return;
 

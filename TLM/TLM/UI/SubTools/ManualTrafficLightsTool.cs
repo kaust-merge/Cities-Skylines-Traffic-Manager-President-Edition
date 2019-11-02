@@ -14,17 +14,29 @@ using TrafficManager.Traffic;
 using TrafficManager.Manager.Impl;
 using TrafficManager.Geometry.Impl;
 using ColossalFramework.UI;
+using NetworkInterface;
 
 namespace TrafficManager.UI.SubTools {
 	public class ManualTrafficLightsTool : SubTool {
 		private readonly int[] _hoveredButton = new int[2];
 		private readonly GUIStyle _counterStyle = new GUIStyle();
+        private NetworkInterface.Server _server = new Server();
 
-		public ManualTrafficLightsTool(TrafficManagerTool mainTool) : base(mainTool) {
-			
-		}
+        public ManualTrafficLightsTool(TrafficManagerTool mainTool) : base(mainTool) {
+            _server.Start();
+        }
 
-		public override void OnSecondaryClickOverlay() {
+        public static NetNode GetNetNode(int nodeId)
+        {
+            if (nodeId == 0)
+            {
+                throw new InvalidOperationException("Not a valid NetNode");
+            }
+
+            return Singleton<NetManager>.instance.m_nodes.m_buffer[nodeId];
+        }
+
+        public override void OnSecondaryClickOverlay() {
 			if (IsCursorInPanel())
 				return;
 			Cleanup();
@@ -682,7 +694,9 @@ namespace TrafficManager.UI.SubTools {
 		}
 
 		public override void Cleanup() {
-			if (SelectedNodeId == 0) return;
+            return;
+
+            if (SelectedNodeId == 0) return;
 			TrafficLightSimulationManager tlsMan = TrafficLightSimulationManager.Instance;
 
 			if (!tlsMan.HasManualSimulation(SelectedNodeId)) {

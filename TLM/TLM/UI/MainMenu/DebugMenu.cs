@@ -54,10 +54,12 @@ namespace TrafficManager.UI {
 		private static UIButton _printFlagsDebugInfoButton = null;
 		private static UIButton _printBenchmarkReportButton = null;
 		private static UIButton _resetBenchmarksButton = null;
+
+		private static UIButton _FMUButton = null;
 #endif
 
 #if QUEUEDSTATS
-		private static UIButton _togglePathFindStatsButton = null;
+        private static UIButton _togglePathFindStatsButton = null;
 #endif
 
 		public static UILabel title;
@@ -197,8 +199,12 @@ namespace TrafficManager.UI {
 			_resetBenchmarksButton = _createButton("Reset benchmarks", y, clickResetBenchmarks);
 			y += 40;
 			height += 40;
+
+            _FMUButton = _createButton("FMU", y, clickFMU);
+            y += 40;
+            height += 40;
 #endif
-		}
+        }
 
 		private UITextField CreateTextField(string str, int y) {
 			UITextField textfield = AddUIComponent<UITextField>();
@@ -413,7 +419,16 @@ namespace TrafficManager.UI {
 			});
 		}
 
-		private void clickVehicleToNone(UIComponent component, UIMouseEventParameter eventParam) {
+        private void clickFMU(UIComponent component, UIMouseEventParameter eventParam)
+        {
+            Constants.ServiceFactory.SimulationService.AddAction(() => 
+            {
+                BenchmarkProfileProvider.Instance.ClearProfiles();
+            });
+        }
+
+
+        private void clickVehicleToNone(UIComponent component, UIMouseEventParameter eventParam) {
 			foreach (KeyValuePair<string, List<byte>> e in customEmergencyLanes) {
 				NetInfo info = PrefabCollection<NetInfo>.FindLoaded(e.Key);
 				if (info == null) {

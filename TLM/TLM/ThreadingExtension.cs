@@ -18,68 +18,81 @@ using System.Runtime.InteropServices;
 using System.Linq;
 using System.Linq.Expressions;
 
-namespace TrafficManager {
-    public sealed class ThreadingExtension : ThreadingExtensionBase {
-		//int ticksSinceLastMinuteUpdate = 0;
+namespace TrafficManager
+{
+    public sealed class ThreadingExtension : ThreadingExtensionBase
+    {
+        //int ticksSinceLastMinuteUpdate = 0;
 
-		ITrafficLightSimulationManager tlsMan = Constants.ManagerFactory.TrafficLightSimulationManager;
-		IGeometryManager geoMan = Constants.ManagerFactory.GeometryManager;
-		IRoutingManager routeMan = Constants.ManagerFactory.RoutingManager;
-		IUtilityManager utilMan = Constants.ManagerFactory.UtilityManager;
+        ITrafficLightSimulationManager tlsMan = Constants.ManagerFactory.TrafficLightSimulationManager;
+        IGeometryManager geoMan = Constants.ManagerFactory.GeometryManager;
+        IRoutingManager routeMan = Constants.ManagerFactory.RoutingManager;
+        IUtilityManager utilMan = Constants.ManagerFactory.UtilityManager;
 
-		bool firstFrame = true;
+        bool firstFrame = true;
 
-		public override void OnCreated(IThreading threading) {
-			base.OnCreated(threading);
+        public override void OnCreated(IThreading threading)
+        {
+            base.OnCreated(threading);
 
-			//ticksSinceLastMinuteUpdate = 0;
-		}
+            //ticksSinceLastMinuteUpdate = 0;
+        }
 
-		public override void OnBeforeSimulationTick() {
-			base.OnBeforeSimulationTick();
+        public override void OnBeforeSimulationTick()
+        {
+            base.OnBeforeSimulationTick();
 
-			geoMan.SimulationStep();
-			routeMan.SimulationStep();
-		}
+            geoMan.SimulationStep();
+            routeMan.SimulationStep();
+        }
 
-		public override void OnBeforeSimulationFrame() {
-			base.OnBeforeSimulationFrame();
+        public override void OnBeforeSimulationFrame()
+        {
+            base.OnBeforeSimulationFrame();
 
-			if (firstFrame) {
-				firstFrame = false;
-				Log.Info($"ThreadingExtension.OnBeforeSimulationFrame: First frame detected. Checking detours.");
+            if (firstFrame)
+            {
+                firstFrame = false;
+                Log.Info($"ThreadingExtension.OnBeforeSimulationFrame: First frame detected. Checking detours.");
 
-				List<string> missingDetours = new List<string>();
-				foreach (Detour detour in LoadingExtension.Detours) {
-					if (! RedirectionHelper.IsRedirected(detour.OriginalMethod, detour.CustomMethod)) {
-						missingDetours.Add($"{detour.OriginalMethod.DeclaringType.Name}.{detour.OriginalMethod.Name} with {detour.OriginalMethod.GetParameters().Length} parameters ({detour.OriginalMethod.DeclaringType.AssemblyQualifiedName})");
-					}
-				}
+                List<string> missingDetours = new List<string>();
+                foreach (Detour detour in LoadingExtension.Detours)
+                {
+                    if (!RedirectionHelper.IsRedirected(detour.OriginalMethod, detour.CustomMethod))
+                    {
+                        missingDetours.Add($"{detour.OriginalMethod.DeclaringType.Name}.{detour.OriginalMethod.Name} with {detour.OriginalMethod.GetParameters().Length} parameters ({detour.OriginalMethod.DeclaringType.AssemblyQualifiedName})");
+                    }
+                }
 
-				Log.Info($"ThreadingExtension.OnBeforeSimulationFrame: First frame detected. Detours checked. Result: {missingDetours.Count} missing detours");
+                Log.Info($"ThreadingExtension.OnBeforeSimulationFrame: First frame detected. Detours checked. Result: {missingDetours.Count} missing detours");
 
-				if (missingDetours.Count > 0) {
-					string error = "Traffic Manager: President Edition detected an incompatibility with another mod! You can continue playing but it's NOT recommended. Traffic Manager will not work as expected. See TMPE.log for technical details.";
-					Log.Error(error);
-					string log = "The following methods were overriden by another mod:";
-					foreach (string missingDetour in missingDetours) {
-						log += $"\n\t{missingDetour}";
-					}
-					Log.Info(log);
-					if (GlobalConfig.Instance.Main.ShowCompatibilityCheckErrorMessage) {
-						Singleton<SimulationManager>.instance.m_ThreadingWrapper.QueueMainThread(() => {
-							UIView.library.ShowModal<ExceptionPanel>("ExceptionPanel").SetMessage("Incompatibility Issue", error, true);
-						});
-					}
-				}
-			}
+                if (missingDetours.Count > 0)
+                {
+                    string error = "Traffic Manager: President Edition detected an incompatibility with another mod! You can continue playing but it's NOT recommended. Traffic Manager will not work as expected. See TMPE.log for technical details.";
+                    Log.Error(error);
+                    string log = "The following methods were overriden by another mod:";
+                    foreach (string missingDetour in missingDetours)
+                    {
+                        log += $"\n\t{missingDetour}";
+                    }
+                    Log.Info(log);
+                    if (GlobalConfig.Instance.Main.ShowCompatibilityCheckErrorMessage)
+                    {
+                        Singleton<SimulationManager>.instance.m_ThreadingWrapper.QueueMainThread(() =>
+                        {
+                            UIView.library.ShowModal<ExceptionPanel>("ExceptionPanel").SetMessage("Incompatibility Issue", error, true);
+                        });
+                    }
+                }
+            }
 
-			if (Options.timedLightsEnabled) {
-				tlsMan.SimulationStep();
-			}
-		}
+            if (Options.timedLightsEnabled)
+            {
+                tlsMan.SimulationStep();
+            }
+        }
 
-		/*public override void OnAfterSimulationFrame() {
+        /*public override void OnAfterSimulationFrame() {
 			base.OnAfterSimulationFrame();
 
 			routeMan.SimulationStep();
@@ -94,7 +107,24 @@ namespace TrafficManager {
 			}
 		}*/
 
-		public override void OnUpdate(float realTimeDelta, float simulationTimeDelta) {
+        private CityServiceWorldInfoPanel _panel;
+        private UICheckBox _fmuCheckBox;
+        private ushort _lastBuildingId = 0;
+
+        private bool FindComponents()
+        {
+            if (_panel != null && _fmuCheckBox != null) return true;
+
+            _panel = UIView.library.Get<CityServiceWorldInfoPanel>(typeof(CityServiceWorldInfoPanel).Name);
+            if (_panel == null) return false;
+
+            _fmuCheckBox = _panel.component.Find<UICheckBox>("testFMU");
+            return _fmuCheckBox != null;
+        }
+
+
+        public override void OnUpdate(float realTimeDelta, float simulationTimeDelta)
+        {
             base.OnUpdate(realTimeDelta, simulationTimeDelta);
 
 #if !TAM
@@ -102,22 +132,46 @@ namespace TrafficManager {
 			using (var bm = new Benchmark()) {
 #endif
 
-				if (ToolsModifierControl.toolController == null || LoadingExtension.BaseUI == null) {
-					return;
-				}
+            if (ToolsModifierControl.toolController == null || LoadingExtension.BaseUI == null)
+            {
+                return;
+            }
 
-				TrafficManagerTool tmTool = UIBase.GetTrafficManagerTool(false);
-				if (tmTool != null && ToolsModifierControl.toolController.CurrentTool != tmTool && LoadingExtension.BaseUI.IsVisible()) {
-					LoadingExtension.BaseUI.Close();
-				}
+            TrafficManagerTool tmTool = UIBase.GetTrafficManagerTool(false);
+            if (tmTool != null && ToolsModifierControl.toolController.CurrentTool != tmTool && LoadingExtension.BaseUI.IsVisible())
+            {
+                LoadingExtension.BaseUI.Close();
+            }
 
-				if (Input.GetKeyDown(KeyCode.Escape)) {
-					LoadingExtension.BaseUI.Close();
-				}
+            if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                LoadingExtension.BaseUI.Close();
+            }
 #if BENCHMARK
 			}
 #endif
 #endif
-		}
-	}
+
+            if (!FindComponents()) return;
+
+            if (_panel.component.isVisible)
+            {
+                ushort buildingId = WorldInfoPanel.GetCurrentInstanceID().Building;
+                //Debug.Log(WorldInfoPanel.GetCurrentInstanceID().Building);
+                if (_lastBuildingId != buildingId)
+                {
+                    var building = Singleton<BuildingManager>.instance.m_buildings.m_buffer[buildingId];
+                    // display the right checkbox state  
+                    _fmuCheckBox.text = "prodRate["+ buildingId + "] = " + building.m_productionRate;
+                    _lastBuildingId = buildingId;
+                }
+            }
+            else
+            {
+                _lastBuildingId = 0;
+            }
+
+
+        }
+    }
 }

@@ -353,9 +353,14 @@ namespace TrafficManager.UI {
 				if (Options.buildingOverlay) {
 					_guiBuildings();
 				}
-				//#endif
 
-				foreach (KeyValuePair<ToolMode, SubTool> en in subTools) {
+                if (Options.fmuOverlay)
+                {
+                    _guifmus();
+                }
+                //#endif
+
+                foreach (KeyValuePair<ToolMode, SubTool> en in subTools) {
 					en.Value.ShowGUIOverlay(en.Key, en.Key != GetToolMode());
 				}
 
@@ -1066,7 +1071,50 @@ namespace TrafficManager.UI {
 			}
 		}
 
-		new internal Color GetToolColor(bool warning, bool error) {
+        private void _guifmus()
+        {
+            GUIStyle _counterStyle = new GUIStyle();
+            Array16<Building> buildings = Singleton<BuildingManager>.instance.m_buildings;
+            for (int i = 1; i < buildings.m_size; ++i)
+            {
+                Building building = buildings.m_buffer[i];
+
+                var m_productionRate = building.m_productionRate;
+                var m_electricityBuffer = building.m_electricityBuffer;
+
+                if (building.m_flags == Building.Flags.None || building.Info.category != "ElectricityDefault") //|| !building.Info.category
+                    continue;
+
+                Vector3 pos = building.m_position;
+                Vector3 screenPos;
+                bool visible = WorldToScreenPoint(pos, out screenPos);
+
+                if (!visible)
+                    continue;
+
+                var camPos = Singleton<SimulationManager>.instance.m_simulationView.m_position;
+                var diff = pos - camPos;
+                if (diff.magnitude > DebugCloseLod)
+                    continue; // do not draw if too distant
+
+                var zoom = 1.0f / diff.magnitude * 150f;
+
+                _counterStyle.fontSize = (int)(10f * zoom);
+                _counterStyle.normal.textColor = new Color(0f, 1f, 0f);
+                //_counterStyle.normal.background = MakeTex(1, 1, new Color(0f, 0f, 0f, 0.4f));
+
+                //ExtBuilding extBuilding = ExtBuildingManager.Instance.ExtBuildings[i];
+                //String labelStr = "Building " + i + ", PDemand: " + extBuilding.parkingSpaceDemand + ", IncTDem: " + extBuilding.incomingPublicTransportDemand + ", OutTDem: " + extBuilding.outgoingPublicTransportDemand;
+                String labelStr = "category = " + building.Info.category + ",  name = " + building.Info.name;
+                // ElectricityDefault , Electricity Pole ; Coal Power Plant , 
+                Vector2 dim = _counterStyle.CalcSize(new GUIContent(labelStr));
+                Rect labelRect = new Rect(screenPos.x - dim.x / 2f, screenPos.y - dim.y - 50f, dim.x, dim.y);
+
+                GUI.Box(labelRect, labelStr, _counterStyle);
+            }
+        }
+
+        new internal Color GetToolColor(bool warning, bool error) {
 			return base.GetToolColor(warning, error);
 		}
 

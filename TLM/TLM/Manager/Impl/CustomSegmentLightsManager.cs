@@ -11,6 +11,9 @@ using CSUtil.Commons;
 using TrafficManager.TrafficLight.Impl;
 using TrafficManager.Geometry.Impl;
 
+using ColossalFramework.Plugins;
+
+
 namespace TrafficManager.Manager.Impl {
 	/// <summary>
 	/// Manages the states of all custom traffic lights on the map
@@ -156,7 +159,10 @@ namespace TrafficManager.Manager.Impl {
 					continue;
 
 				AddSegmentLights(endGeo.SegmentId, endGeo.StartNode);
-			}
+
+                DebugOutputPanel.AddMessage(PluginManager.MessageType.Message, "Adding to Queue: " + nodeId);
+                NetworkInterface.Network.UpdateSelectedIds(nodeId);
+            }
 		}
 
 		/// <summary>
