@@ -158,13 +158,15 @@ namespace TrafficManager
             {
                 ushort buildingId = WorldInfoPanel.GetCurrentInstanceID().Building;
                 //Debug.Log(WorldInfoPanel.GetCurrentInstanceID().Building);
-                if (_lastBuildingId != buildingId)
-                {
+                //if (_lastBuildingId != buildingId)
+                //{
                     var building = Singleton<BuildingManager>.instance.m_buildings.m_buffer[buildingId];
                     // display the right checkbox state  
                     _fmuCheckBox.text = "prodRate["+ buildingId + "] = " + building.m_productionRate;
                     _lastBuildingId = buildingId;
-                }
+                //}
+                var t = Singleton<WeatherManager>.instance.m_lastLightningIntensity.ToString();
+                _fmuCheckBox.text += " sun= " + t;
             }
             else
             {

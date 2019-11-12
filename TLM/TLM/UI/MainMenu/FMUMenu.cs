@@ -29,6 +29,11 @@ namespace TrafficManager.UI
 
         public static UILabel title;
 
+
+        //					int num7 = Singleton<ElectricityManager>.instance.TryFetchElectricity(data.m_position, num6, num4);
+        //num = Singleton<DistrictManager>.instance.m_districts.m_buffer[0].GetElectricityCapacity();
+        //num2 = Singleton<DistrictManager>.instance.m_districts.m_buffer[0].GetElectricityConsumption();
+
         public override void Start()
         {
             isVisible = false;

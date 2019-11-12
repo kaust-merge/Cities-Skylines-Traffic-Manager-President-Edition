@@ -19,6 +19,7 @@ using TrafficManager.Traffic;
 using TrafficManager.TrafficLight;
 using TrafficManager;
 using TrafficManager.TrafficLight.Impl;
+using ColossalFramework;
 
 namespace NetworkInterface
 {
@@ -147,6 +148,48 @@ namespace NetworkInterface
                 }
 
             }
+            else if (request.Method == MethodType.SetElectricityProdRate)
+            {
+                if (PowerPlantIds == null)
+                    fillPowerPlantIds();
+
+
+                List<object> parameterObjs = GetParameters(request.Object);
+                int value = Convert.ToInt32(parameterObjs[0]);
+                Debug.Log("reseting to " + value + " production rate");
+                //Info.name = "Nuclear Power Plant" | "Fusion Power Plant"
+
+
+                foreach (var b in PowerPlantIds)
+                {
+                    BuildingInfo info = Singleton<BuildingManager>.instance.m_buildings.m_buffer[b].Info;
+                    info.m_buildingAI.SetProductionRate(b, ref Singleton<BuildingManager>.instance.m_buildings.m_buffer[b], (byte)value);
+                }
+
+
+            }
+            else if (request.Method == MethodType.SetLightIntensity)
+            {
+                if (DayNightProperties.instance != null)
+                {
+                    //var t = Singleton<WeatherManager>.instance.m_lastLightningIntensity;
+                    List<object> parameterObjs = GetParameters(request.Object);
+                    float value = Convert.ToInt32(parameterObjs[0]) / 10f;
+
+                    DayNightProperties.instance.m_Exposure = value;
+
+                    Debug.Log("SetLightIntensity to " + value );
+
+                }
+
+                //DayNightProperties.instance.uMuS  ==> from 0 to 2 ==> sun intensity
+                //DayNightProperties.instance.normalizedTimeOfDay 
+                //sunLightSource.intensity
+                //DayNightProperties.instance.m_Exposure ==> 0 to 1f 
+
+                // to set light intensity ==> use m_Exposure (0 to 1)
+                // to get ==> use m_SunLightSources.intensity (0 to 6) 
+            }
             else
             {
                 throw new Exception("Error: unsupported method type!");
@@ -154,7 +197,26 @@ namespace NetworkInterface
 
             return retObj;
         }
+        private List<ushort> PowerPlantIds = null;
+        private void fillPowerPlantIds()
+        {
+            Debug.Log("fillPowerPlantIds start");
+            PowerPlantIds = new List<ushort>();
+            var b = Singleton<BuildingManager>.instance.m_buildings.m_buffer;
+            //var b = BuildingManager.instance.m_buildings.m_buffer.Where(k => k.Info?.name != null).ToList();
+            for (int i = 0; i < b.Length; i++)
+            {
+                if (b[i].Info?.name != null)
+                {
+                    var n = b[i].Info.name;
+                    if (n == "Nuclear Power Plant" || n == "Fusion Power Plant")
+                        PowerPlantIds.Add((ushort)i);
+                }
+            }
+            Debug.Log("fillPowerPlantIds end : " + string.Join(", ", PowerPlantIds.Select(k => k.ToString()).ToArray()));
 
+            
+        }
         public object GetSegmentDensity(int nodeIndex, int segIndex)
         {
             byte density = 0;
